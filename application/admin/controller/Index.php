@@ -8,7 +8,7 @@ class Index extends Com
     }
 
     public function index(){
-        $this->assign($this->_arr);
+//        $this->assign($this->_arr);
         return $this->fetch();
     }
 }

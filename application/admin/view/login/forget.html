@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>登录-{$Think.CONFIG.title}</title>
+    <link rel="shortcut icon" href="/static/favicon.ico" />
+    <meta name="keywords" content="{$Think.CONFIG.keywords}" />
+    <meta name="description" content="{$Think.CONFIG.description}" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no" />
+    <link href="/static/css/index_style.css" rel="stylesheet" type="text/css"/>
+    <link href="https://cdn.bootcss.com/element-ui/2.0.11/theme-chalk/index.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/vue/2.5.13/vue.min.js"></script>
+    <script src="https://cdn.bootcss.com/element-ui/2.0.11/index.js"></script>
+</head>
+<body style="background:#070C29;">
+<!--注册弹框-->
+<div id="forget"
+     v-loading="loading"
+     element-loading-text="拼命加载中"
+     element-loading-spinner="el-icon-loading"
+     element-loading-background="rgba(0, 0, 0, 0.8)"
+     class="lg-content lg-login">
+    <div class="lg-pic" @click="goIndex()">
+        <img src="/static/img/content_logo.png"/>
+        <div class="lg-close">
+            <img src="/static/img/close.png"/>
+        </div>
+    </div>
+    <el-form
+            :model="formData"
+            :rules="rules"
+            ref="formData">
+        <el-form-item label="" prop="mobile" class="lg-item" v-if="!formData.token">
+            <img src="/static/img/user.png"/>
+            <input type="text" v-model="formData.mobile" placeholder="手机号码" class="lgtext"/>
+        </el-form-item>
+        <el-form-item label="" prop="captcha" class="lg-item" v-if="!formData.token">
+            <img src="/static/img/edit.png"/>
+            <input type="text"
+                   v-model="formData.captcha"
+                   placeholder="证明你不是机器人"
+                   class="lgcode"
+                   style="width: 250px;" />
+            <img :src="captcha" alt="captcha" class="verifycode fleft"  @click="getCaptcha()" />
+        </el-form-item>
+        <el-form-item label="" prop="code" class="lg-item" v-if="!formData.token">
+            <img src="/static/img/edit.png"/>
+            <input type="text"
+                   v-model="formData.code"
+                   placeholder="请输入手机验证码"
+                   style="width: 250px;"
+                   class="lgcode"/>
+            <input type="button" @click="sendcode()" class="sendcode" :disabled="sendBtnDisable"  :value="sendBtnTxt" />
+        </el-form-item>
+        <el-form-item label="" prop="pwd" class="lg-item" v-if="formData.token">
+            <img src="/static/img/pwd.png"/>
+            <input type="password" v-model="formData.pwd" placeholder="请输入密码" class="lgtext"/>
+        </el-form-item>
+        <el-form-item label="" prop="repwd" class="lg-item" v-if="formData.token">
+            <img src="/static/img/pwd.png"/>
+            <input type="password" v-model="formData.repwd" placeholder="请再次输入密码" class="lgtext"/>
+        </el-form-item>
+        <el-form-item label="" class="lg-item">
+            <input type="button" class="lgbtn regitBtn" @click="submit('formData')" value="找回密码" />
+        </el-form-item>
+    </el-form>
+</div>
+<!--注册弹框结束-->
+<script src="/static/js/jquery.min.js" type="text/javascript"></script>
+<script src="/static/js/config.js" type="text/javascript"></script>
+<script>
+    var wait = 60;
+    var _this;
+    new Vue({
+        el: '#forget',
+        data:function() {
+            return {
+                loading:true,
+                sendBtnDisable:false,
+                sendBtnTxt:"发送验证码",
+                captcha:"{:captcha_src()}",
+                formData:{
+                    mobile:"",
+                    captcha:"",
+                    code:"",
+                    token:""
+                },
+                rules:{
+                    mobile:[
+                        { required: true, message: '请输入手机号码', trigger: 'blur' }
+                    ],
+                    captcha:[
+                        { required: true, message: '请输入图形验证码', trigger: 'blur' }
+                    ],
+                    code:[
+                        { required: true, message: '请输入手机验证码', trigger: 'blur' }
+                    ],
+                    pwd:[
+                        { required: true, message: '请输入用户密码', trigger: 'blur' }
+                    ],
+                    repwd:[
+                        { required: true, message: '请再次输入用户密码', trigger: 'blur' }
+                    ]
+                }
+            }
+        },
+        methods: {
+            goIndex:function () {
+                location.href = "/";
+            },
+            getCaptcha:function () {
+                _this.captcha += "?"+new Date().getTime();
+            },
+            time:function() {
+                if (wait == 0) {
+                    _this.sendBtnDisable = false;
+                    _this.sendBtnTxt = "发送验证码";
+                    wait = 60;
+                } else {
+                    _this.sendBtnDisable = true;
+                    _this.sendBtnTxt = "倒计时(" + wait + ")";
+                    wait--;
+                    setTimeout(function () {
+                        _this.time()
+                    }, 1000)
+                }
+            },
+            sendcode:function () {
+                //发送验证码
+                $.post(window.lcjob.domainApi + '/system/sendMobile', {mobile:_this.formData.username, type:2}, function (res) {
+                    if(!res.status){
+                        _this.$notify.error({
+                            title: '发送失败',
+                            message: res.info
+                        });
+                        return false;
+                    }
+                    _this.time();
+                }, 'json');
+            },
+            submit:function(formName){
+                _this.$refs[formName].validate(function(valid) {
+                    if (!valid) {
+                        return false;
+                    }
+                    var postData = JSON.parse(JSON.stringify(_this.formData));
+                    if(postData.token){
+                        $.ajax({
+                            url:window.lcjob.domainApi + '/member/forget',
+                            type:"PUT",
+                            data:postData,
+                            success:function(res){
+                                if(res.errcode != 0){
+                                    _this.$notify.error({
+                                        title: '操作失败',
+                                        message: res.errmsg
+                                    });
+                                    return;
+                                }
+                                location.href = "/index";
+                            }
+                        });
+                    }else{
+                        $.post(window.lcjob.domainApi + '/member/forget', postData, function (res) {
+                            if(res.errcode != 0){
+                                _this.$notify.error({
+                                    title: '操作失败',
+                                    message: res.errmsg
+                                });
+                                return;
+                            }
+                            _this.formData.token = res.data.token;
+                            _this.$refs[formName].clearValidate();
+                        }, 'json');
+                    }
+                });
+            }
+        },
+        mounted:function() {
+            _this = this;
+            setTimeout(function () {
+                _this.loading = false;
+            }, 500)
+        }
+    });
+
+</script>
+</body>
+</html>

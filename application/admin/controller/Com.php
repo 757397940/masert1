@@ -2,8 +2,8 @@
 namespace app\admin\controller;
 
 use app\common\controller\Base;
-use think\Config;
-use think\Session;
+use think\facade\Config;
+use think\facade\Session;
 
 class Com extends Base{
     protected $USER;
@@ -22,8 +22,8 @@ class Com extends Base{
         }
     }
 
-    $userinfo = db("auth_group")
-        ->alias()
+//    $userinfo = db("auth_group")
+//        ->alias()
 
 
 }

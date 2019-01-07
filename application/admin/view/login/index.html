@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>登录-{$Think.CONFIG.title}</title>
+    <link rel="shortcut icon" href="/static/favicon.ico" />
+    <meta name="keywords" content="{$Think.CONFIG.keywords}" />
+    <meta name="description" content="{$Think.CONFIG.description}" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no" />
+    <link href="/static/css/index_style.css" rel="stylesheet" type="text/css"/>
+    <link href="https://cdn.bootcss.com/element-ui/2.0.11/theme-chalk/index.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/vue/2.5.13/vue.min.js"></script>
+    <script src="https://cdn.bootcss.com/element-ui/2.0.11/index.js"></script>
+</head>
+<body style="background:#070C29;">
+<!--注册弹框-->
+<div id="login"
+     v-loading="loading"
+     element-loading-text="拼命加载中"
+     element-loading-spinner="el-icon-loading"
+     element-loading-background="rgba(0, 0, 0, 0.8)"
+     class="lg-content lg-login">
+    <div class="lg-pic" @click="goIndex()">
+        <img src="/static/img/content_logo.png"/>
+        <div class="lg-close">
+            <img src="/static/img/close.png"/>
+        </div>
+    </div>
+    <el-form
+            :model="formData"
+            :rules="rules"
+            ref="formData">
+        <el-form-item label="" class="lg-tab">
+            <el-row>
+                <el-col :span="12" @click.native="switchTap(1)" :class="{'active':loginType==1?'active':''}">密码登陆</el-col>
+                <el-col :span="12" @click.native="switchTap(2)" :class="{'active':loginType==2?'active':''}">验证码登陆</el-col>
+            </el-row>
+        </el-form-item>
+        <el-form-item label="" prop="username" class="lg-item">
+            <img src="/static/img/user.png"/>
+            <input type="text" v-model="formData.username" placeholder="手机号码/用户名" class="lgtext"/>
+        </el-form-item>
+        <el-form-item label="" prop="password" class="lg-item" v-if="loginType==1">
+            <img src="/static/img/pwd.png"/>
+            <input type="password" v-model="formData.password" placeholder="请输入登陆密码" class="lgtext" />
+        </el-form-item>
+        <el-form-item label="" class="lg-item" v-if="loginType==1">
+            <el-checkbox v-model="formData.remember" class="fleft">记住密码</el-checkbox>
+            <span class="fpwd fright" @click="forget()">找回密码</span>
+            <div style="clear:both;"></div>
+        </el-form-item>
+        <el-form-item label="" prop="code" class="lg-item" v-if="loginType==2">
+            <img src="/static/img/edit.png"/>
+            <input type="text"  v-model="formData.code" placeholder="请输入手机验证码" class="lgcode"/>
+            <input type="button" @click="sendcode()" class="sendcode" :disabled="sendBtnDisable"  :value="sendBtnTxt" />
+        </el-form-item>
+        <el-form-item label="" class="lg-item">
+            <input type="button" class="lgbtn" @click="submit('formData')" value="登陆"/>
+            <input type="button" class="lgbtn lg-regit" value="注册" @click="showregister()"/>
+        </el-form-item>
+    </el-form>
+</div>
+<!--注册弹框结束-->
+<script src="/static/js/jquery.min.js" type="text/javascript"></script>
+<script>
+    var wait = 60;
+    var _this;
+    new Vue({
+        el: '#login',
+        data:function() {
+            return {
+                loading:true,
+                loginType:2,
+                sendBtnDisable:false,
+                sendBtnTxt:"发送验证码",
+                formData:{
+                    username:"",
+                    password:"",
+                    code:"",
+                    remember:true
+                },
+                rules:{
+                    username:[
+                        { required: true, message: '请输入手机号码/用户名', trigger: 'blur' }
+                    ],
+                    password:[
+                        { required: true, message: '请输入用户密码', trigger: 'blur' }
+                    ],
+                    code:[
+                        { required: true, message: '请输入手机验证码', trigger: 'blur' }
+                    ]
+                }
+            }
+        },
+        methods: {
+            goIndex:function () {
+                location.href = "/";
+            },
+            showregister:function () {
+                location.href = "/register";
+            },
+            forget:function () {
+                location.href = "/forget";
+            },
+            time:function() {
+                if (wait == 0) {
+                    _this.sendBtnDisable = false;
+                    _this.sendBtnTxt = "发送验证码";
+                    wait = 60;
+                } else {
+                    _this.sendBtnDisable = true;
+                    _this.sendBtnTxt = "倒计时(" + wait + ")";
+                    wait--;
+                    setTimeout(function () {
+                        _this.time()
+                    }, 1000)
+                }
+            },
+            switchTap:function (index) {
+                _this.loginType = index;
+                _this.setCookie('loginType', index, 7);
+                _this.$refs['formData'].clearValidate();
+            },
+            sendcode:function () {
+                //发送验证码
+                $.post('/api/system/sendMobile', {mobile:_this.formData.username, type:5}, function (res) {
+                    if(!res.status){
+                        _this.$notify.error({
+                            title: '发送失败',
+                            message: res.info
+                        });
+                        return false;
+                    }
+                    _this.time();
+                }, 'json');
+            },
+            submit:function(formName){
+                _this.$refs[formName].validate(function(valid) {
+                    if (!valid) {
+                        return false;
+                    }
+                    //判断复选框是否被勾选 勾选则调用配置cookie方法
+                    if (_this.formData.remember) {
+                        _this.setCookie('userName', _this.formData.username, 7);
+                        _this.setCookie('userPwd', _this.formData.password, 7);
+                    }else {
+                        _this.clearCookie();
+                    }
+                    var postData = JSON.parse(JSON.stringify(_this.formData));
+                    if(_this.loginType == 1){
+                        postData.code = "";
+                    }else{
+                        postData.password = "";
+                    }
+                    $.post('/api/member/login', postData, function (res) {
+                        if(res.errcode != 0){
+                            _this.$notify.error({
+                                title: '登录失败',
+                                message: res.errmsg
+                            });
+                            return;
+                        }
+                        localStorage.setItem("group_id", res.data.group_id);
+                        location.href = "/index";
+                    }, 'json');
+                });
+            },
+            setCookie:function(key, value, exdays) {
+                var exdate = new Date();
+                exdate.setTime(exdate.getTime() + 24 * 60 * 60 * 1000 * exdays); //保存的天数
+                //字符串拼接cookie
+                window.document.cookie = key + "=" + value + ";path=/;expires=" + exdate.toGMTString();
+            },
+            //读取cookie
+            getCookie: function(key) {
+                if (document.cookie.length > 0) {
+                    var arr = document.cookie.split('; '); //这里显示的格式需要切割一下自己可输出看下
+                    for (var i = 0; i < arr.length; i++) {
+                        var arr2 = arr[i].split('='); //再次切割
+                        //判断查找相对应的值
+                        if (arr2[0] == 'userName') {
+                            _this.formData.username = arr2[1]; //保存到保存数据的地方
+                        } else if (arr2[0] == 'userPwd') {
+                            _this.formData.password = arr2[1];
+                        }else{
+                            _this[arr2[0]] = arr2[1];
+                        }
+                    }
+                }
+            },
+            //清除cookie
+            clearCookie: function() {
+                this.setCookie("userName", "", -1); //修改2值都为空，天数为负1天就好了
+                this.setCookie("userPwd", "", -1); //修改2值都为空，天数为负1天就好了
+            }
+        },
+        mounted:function() {
+            _this = this;
+            _this.getCookie();
+            setTimeout(function () {
+                _this.loading = false;
+            }, 500)
+        }
+    });
+
+</script>
+</body>
+</html>

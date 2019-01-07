@@ -19,19 +19,9 @@
         </div>
         <div class="nav-content">
             <ul>
-                <if condition="!empty($user) && $user['uid']">
-                    <li>
-                        <a href="/index">
-                            <img src="{$user.head_img|showFile}" class="radius" />
-                            <span class="navtxt">
-                                {$user.nick_name | default= $user['real_name']}
-                            </span>
-                        </a>
-                    </li>
-                <else/>
+                <!--缺少一段东西,写完注册登录后再添加-->
                     <li><a href="login.html"><img src="/static/img/user.png"><span class="navtxt">登陆</span></a></li>
                     <li><a href="register.html"><img src="/static/img/edit.png"><span class="navtxt">注册</span></a></li>
-                </if>
             </ul>
         </div>
     </div>

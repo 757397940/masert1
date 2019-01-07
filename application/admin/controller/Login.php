@@ -58,6 +58,7 @@ class Login extends Base{
             }
             $this->_arr['group_id'] = $group_id;
         }
+//        echo 111;
         $this->assign($this->_arr);
         return $this->fetch();
     }

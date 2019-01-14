@@ -1,6 +1,7 @@
 <?php
 namespace app\common\model;
 
+use think\Config;
 use think\Request;
 
 class MemberVerify extends Common{
@@ -34,6 +35,9 @@ class MemberVerify extends Common{
             $data['code'] = $this->getCode();
             $data['regip'] = Request::instance()->ip();
             $r = $this->save($data,$where);
+            if($r){
+                $id = $info['id'];
+            }
         }else{
             //新增数据
             $date['uid'] = $uid;
@@ -46,8 +50,14 @@ class MemberVerify extends Common{
         }
 
         if ($type==1){
-
+            $content = "您正在注册您正在注册凌晨科技移动办公平台用户，验证码".$data['code']."。5分钟之内有效，感谢您的支持!";
+        }elseif($type==3){
+            $content = "您正在更改绑定凌晨科技移动办公平台用户手机号码，验证码".$data['code']."。5分钟之内有效，感谢您的支持！";
+        }else{
+            $content = "您正在修改密码，验证码".$data['code']."。5分钟之内有效，感谢您的支持！";
         }
+        $post_data = array();
+        $post_data['account'] = Config::get('SEN_MOBILE_ACCOUNT');
 
     }
 

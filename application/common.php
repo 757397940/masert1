@@ -11,3 +11,19 @@ function apierror($errname, $msg = ''){
     ];
     return $error;
 }
+
+function setting($k=''){
+    $settingModel = db("setting");
+    $config = [];
+    if($k==''){
+        $setting  = $settingModel->field("k,v")->select();
+        foreach($setting as $k=>$v){
+            $config[$v['k']] = $v['v'];
+        }
+        return $config;
+    }else{
+        $resulf = $settingModel->where("k={$k}")->find();
+        return $result['v'];
+
+    }
+}

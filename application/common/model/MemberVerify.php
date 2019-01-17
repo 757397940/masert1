@@ -1,6 +1,7 @@
 <?php
 namespace app\common\model;
 
+use GuzzleHttp\Client;
 use think\Config;
 use think\Request;
 
@@ -58,8 +59,40 @@ class MemberVerify extends Common{
         }
         $post_data = array();
         $post_data['account'] = Config::get('SEN_MOBILE_ACCOUNT');
+        $post_data['pswd'] = Config::git('SEN_MOBILE_PWD');
+        $post_data['msg'] = $content;
+        $post_data['mobile'] = $mobile;
+        $post_data['needstatus'] = true;
+        $url = Config::get('SEND_MOBILE_URL');
+        $res = $this->sendCode($url,http_build_query($post_data));
+        if ($res === true){
+            //发送成功
+            $r = $this->where("id=".$id."")->setInc("sendnum",1);
+            if ($r){
+                return true;
+            }else{
+                $this->error = "程序错误";return false;
+            }
+        }else{
+            write_log('短信发送失败'.$res.json_encode($data));
+            $this->error = "发送失败";return false;
+        }
 
     }
+
+    /**
+     * 发送验证码
+     * @param $url
+     * @param $data
+     * @return bool/string
+     */
+    public function sendCode($url,$data){
+        if(function_exists('curl_init')){
+            $client = new Client();
+        }
+    }
+
+
 
     //获取验证码
     public function getCode(){

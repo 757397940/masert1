@@ -1,5 +1,21 @@
 {
+    "name": "lcjob/job",
+    "type": "project",
     "require": {
-        "topthink/think-captcha": "^2.0"
+        "php": ">=5.6.0",
+        "topthink/framework": "5.1.31",
+        "topthink/think-captcha": "^2.0",
+        "phpoffice/phpexcel": "^1.8",
+        "phpoffice/phpword": "^0.14.0",
+        "tecnickcom/tcpdf": "^6.2",
+        "firebase/php-jwt": "^5.0",
+        "sunra/php-simple-html-dom-parser": "1.5.2",
+        "guzzlehttp/guzzle": "^6.3"
+    },
+    "extra": {
+        "think-path": "thinkphp"
+    },
+    "config": {
+        "preferred-install": "dist"
     }
 }
